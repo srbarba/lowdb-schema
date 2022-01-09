@@ -1,0 +1,21 @@
+{
+  "name": "Node.js & TypeScript",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "16-bullseye"
+    }
+  },
+  "settings": {},
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "coenraads.bracket-pair-colorizer-2",
+    "editorconfig.editorconfig",
+    "eamodio.gitlens",
+    "zh9528.file-size",
+    "wix.vscode-import-cost",
+    "logerfo.gzip-status"
+  ],
+  "remoteUser": "node"
+}
