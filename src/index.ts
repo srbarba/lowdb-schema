@@ -59,9 +59,6 @@ class ModelData<D extends Record<string, any>> {
   }
 
   save() {
-    if (!this.model.data) {
-      throw new Error("Connection not found")
-    }
     if (this.index < 0) {
       this.model.data.push(this.data)
     } else {
@@ -70,6 +67,22 @@ class ModelData<D extends Record<string, any>> {
     this.isNew = false
     this.isSaved = true
     this.model.save()
+  }
+
+  update(values: Partial<D>) {
+    for (const key in values) {
+      const value = values[key]
+      set(this.data, key, value)
+    }
+    this.save()
+  }
+
+  destroy() {
+    if (this.index >= 0) {
+      this.model.data.splice(this.index, 1)
+    }
+    this.model.save()
+    return this
   }
 
   valueOf() {

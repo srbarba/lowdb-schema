@@ -196,6 +196,38 @@ describe("add", () => {
   })
 })
 
+describe("destroy", () => {
+  const file = join(__dirname, ".temp/users.db.json")
+  prepareDb(file)
+
+  it("creates and saves user", () => {
+    const givenUser = { id: "3", name: "Jr", surname: "Doe" }
+    const UserModel = createInFileUserModel(file)
+    const user = UserModel.first()!
+    user.destroy()
+    expect(createInFileUserModel(file).first()?.valueOf()).not.toEqual(
+      user.valueOf(),
+    )
+  })
+})
+
+describe("updates", () => {
+  const file = join(__dirname, ".temp/users.db.json")
+  prepareDb(file)
+
+  it("set given values and saves user", () => {
+    const givenSurname = "Smith"
+    const UserModel = createInFileUserModel(file)
+    const user = UserModel.first()!
+    user.update({ surname: givenSurname })
+    user.save()
+
+    expect(createInFileUserModel(file).first()?.valueOf().surname).toEqual(
+      givenSurname,
+    )
+  })
+})
+
 describe("reload", () => {
   const file = join(__dirname, ".temp/users.db.json")
   prepareDb(file)
