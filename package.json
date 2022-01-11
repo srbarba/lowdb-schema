@@ -16,7 +16,7 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build-fast": "tsup src/index.ts --format cjs,esm --external lodash lowdb",
+    "build-fast": "tsup src/index.ts --format cjs,esm --external lodash lowdb fs path",
     "build": "pnpm run build-fast -- --dts-resolve",
     "test": "vitest run",
     "test:watch": "vitest watch",

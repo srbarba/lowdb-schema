@@ -1,8 +1,10 @@
 import { get, set, findIndex, find, filter, reverse } from "lodash"
-import type { Low, LowSync } from "lowdb"
 import type { RecordPaths, GetPathValue } from "./utils"
+import { dirname } from "path"
+import { mkdirSync, existsSync } from "fs"
+import { LowSync, MemorySync, JSONFileSync } from "lowdb"
 
-type Database<D> = Low<D> | LowSync<D>
+type Database<D> = LowSync<D>
 
 interface ModelDataProps<D> {
   model: Model<D>
@@ -40,7 +42,10 @@ class ModelData<D extends Record<string, any>> {
   }
 
   get index() {
-    return findIndex(this.model.data, { id: this.data.id })
+    const id = this.data[this.model.identifier]
+    return findIndex(this.model.data, {
+      [this.model.identifier]: id,
+    } as any)
   }
 
   get<P extends RecordPaths<D>, V extends GetPathValue<D, P>>(
@@ -100,20 +105,22 @@ function toModelData<D>(model: Model<D>) {
 type ModelProps<D> = {
   db: Database<D[]>
   seeds: () => D[]
+  identifier: string
 }
 export class Model<D> {
   db: Database<D[]>
   seeds: () => D[]
+  identifier: string
 
   constructor(props: ModelProps<D>) {
     this.db = props.db
     this.seeds = props.seeds
+    this.identifier = props.identifier
   }
 
   get data() {
     if (this.db.data === null) {
-      this.db.read()
-      this.db.data ||= this.seeds?.()
+      this.reload()
     }
     return this.db.data || ([] as D[])
   }
@@ -163,6 +170,31 @@ export class Model<D> {
   }
 }
 
-export function defineModel<D>({ db, seeds }: ModelProps<D>) {
-  return Object.freeze(new Model({ db, seeds }))
+export interface DefineModelOptions<D> {
+  file?: string
+  seeds: () => D[]
+  identifier?: string
+}
+
+export function defineModel<D>({
+  file,
+  seeds,
+  identifier = "id",
+}: DefineModelOptions<D>) {
+  return Object.freeze(
+    new Model({ db: getLowdb<D[]>(file), seeds, identifier }),
+  )
+}
+
+function getLowdb<D>(file?: string) {
+  return new LowSync<D>(getLowdbAdapter<D>(file))
+}
+
+function getLowdbAdapter<D>(file?: string) {
+  if (file) {
+    const dir = dirname(file)
+    dir && !existsSync(dir) && mkdirSync(dir)
+    return new JSONFileSync<D>(file)
+  }
+  return new MemorySync<D>()
 }

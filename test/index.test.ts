@@ -1,7 +1,6 @@
 import { join, dirname } from "path"
 import { mkdirSync, existsSync, unlinkSync } from "fs"
 import { describe, it, expect, afterEach, beforeEach } from "vitest"
-import { LowSync, MemorySync, JSONFileSync } from "lowdb"
 import { defineModel } from "../src"
 
 type User = {
@@ -150,10 +149,7 @@ describe("set", () => {
 })
 
 function createInMemoryUserModel(seeds = data) {
-  const adapter = new MemorySync<User[]>()
-  const db = new LowSync<User[]>(adapter)
   return defineModel<User>({
-    db,
     seeds,
   })
 }
@@ -201,7 +197,6 @@ describe("destroy", () => {
   prepareDb(file)
 
   it("creates and saves user", () => {
-    const givenUser = { id: "3", name: "Jr", surname: "Doe" }
     const UserModel = createInFileUserModel(file)
     const user = UserModel.first()!
     user.destroy()
@@ -258,10 +253,8 @@ function prepareDb(file: string) {
 }
 
 function createInFileUserModel(file: string, seeds = data) {
-  const adapter = new JSONFileSync<User[]>(file)
-  const db = new LowSync<User[]>(adapter)
   return defineModel<User>({
-    db,
+    file,
     seeds,
   })
 }
