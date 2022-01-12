@@ -1,7 +1,11 @@
-import { join, dirname } from "path"
-import { mkdirSync, existsSync, unlinkSync } from "fs"
+import { join } from "path"
+import { existsSync, unlinkSync } from "fs"
 import { describe, it, expect, afterEach, beforeEach } from "vitest"
-import { defineModel } from "../src"
+import {
+  defineInJSONFileModel,
+  defineInMemoryModel,
+  filePathExistsOrCreate,
+} from "../src"
 
 type User = {
   id: string
@@ -149,9 +153,7 @@ describe("set", () => {
 })
 
 function createInMemoryUserModel(seeds = data) {
-  return defineModel<User>({
-    seeds,
-  })
+  return defineInMemoryModel<User>({ seeds })
 }
 
 describe("save", () => {
@@ -241,10 +243,33 @@ describe("reload", () => {
   })
 })
 
+describe("restore", () => {
+  const file = join(__dirname, ".temp/users.db.json")
+  prepareDb(file)
+
+  beforeEach(() => {
+    const UserModel = createInFileUserModel(file)
+    const givenUser = { id: "3", name: "Jr", surname: "Doe" }
+    UserModel.add(givenUser)
+  })
+
+  it("restore db data", () => {
+    const UserModel = createInFileUserModel(file)
+    expect(UserModel.all().length).toEqual(data().length + 1)
+
+    UserModel.restore()
+    expect(createInFileUserModel(file).all().length).toEqual(data().length)
+  })
+
+  it("throws error", () => {
+    const UserModel = createInFileUserModel(file, null as any)
+    expect(() => UserModel.restore()).toThrowError()
+  })
+})
+
 function prepareDb(file: string) {
   beforeEach(() => {
-    const dir = dirname(file)
-    dir && !existsSync(dir) && mkdirSync(dir)
+    filePathExistsOrCreate(file)
   })
 
   afterEach(() => {
@@ -253,7 +278,7 @@ function prepareDb(file: string) {
 }
 
 function createInFileUserModel(file: string, seeds = data) {
-  return defineModel<User>({
+  return defineInJSONFileModel<User>({
     file,
     seeds,
   })
